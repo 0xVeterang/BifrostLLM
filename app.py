@@ -11,7 +11,6 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.schema import Document
 from langchain_core.runnables import RunnablePassthrough
-import config  # config.py에서 OPENAI_API_KEY를 가져옴
 
 # 페이지 설정 (맨 위에 추가)
 st.set_page_config(
@@ -21,7 +20,7 @@ st.set_page_config(
 )
 
 # OpenAI API Key 설정
-OPENAI_API_KEY = config.OPENAI_API_KEY
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 # api key 유효성 체크 (그대로 실행하세요)
 def check_openai_api_key(key):
