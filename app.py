@@ -17,7 +17,7 @@ import config  # config.py에서 OPENAI_API_KEY를 가져옴
 st.set_page_config(
     page_title="Bifrost GPT",
     page_icon=os.path.join(os.path.dirname(__file__), "resources", "img", "logo.webp"),
-    layout="wide"
+    layout="centered"
 )
 
 # OpenAI API Key 설정
@@ -109,7 +109,7 @@ if key:
         prompt = PromptTemplate.from_template(template)
         
         # LLM 생성
-        llm = ChatOpenAI(model_name="gpt-4o", temperature=0, openai_api_key=key)
+        llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0, openai_api_key=key)
         # 파서 생성
         parser = StrOutputParser()
         # 체인 생성
@@ -124,7 +124,8 @@ if key:
             | parser
         )
 
-        st.title("Bifrost Network Support")
+        st.title("Bifrost Network Assistant")
+        st.subheader("무엇을 도와드릴까요?")
 
         # 세션 상태(session_state)에 메시지 항목 생성
         if "messages" not in st.session_state:
@@ -151,7 +152,7 @@ if key:
             st.session_state.messages.append({"role": "user", "content": question})
             st.session_state.messages.append({"role": "assistant", "content": message})
 
-# 자동 스크롤 스크립트 (그대로 사용하세요.)
+# 자동 스크롤 스크립트
 js = '''
 <script>
     var body = window.parent.document.querySelector(".main");
