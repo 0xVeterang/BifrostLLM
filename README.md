@@ -1,6 +1,7 @@
 # Bifrost LLM Project
 
 This project is a fine-tuned Large Language Model (LLM) based on the GPT-4o model, optimized for services within the Bifrost network, including **BiFi, Everdex, and Pockie**.  
+![image](https://github.com/user-attachments/assets/5353663e-1121-4a57-9fec-83f350e122c1)
 
 ## Features
 - Tailored AI responses specifically designed for Bifrost ecosystem services.
