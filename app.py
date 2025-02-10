@@ -21,6 +21,8 @@ st.set_page_config(
 
 # OpenAI API Key 설정
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
 
 # api key 유효성 체크 (그대로 실행하세요)
 def check_openai_api_key(key):
@@ -36,10 +38,6 @@ def check_openai_api_key(key):
             st.sidebar.error(e.code)
         del llm
         return False
-
-# 사이드 바 추가 및 텍스트 입력기 추가
-key = OPENAI_API_KEY
-#key = st.sidebar.text_input('OPENAI API KEY', type='password', value=OPENAI_API_KEY)
 
 # 로고 파일 경로 설정
 logo_path = os.path.join(os.path.dirname(__file__), "resources", "img", "logo.webp")
@@ -76,7 +74,7 @@ txt_docs = text_splitter.split_text(content)
 documents = [Document(page_content=doc) for doc in txt_docs]
 
 # 임베딩 생성
-embeddings = OpenAIEmbeddings(model='text-embedding-3-small', openai_api_key=key)
+embeddings = OpenAIEmbeddings(model='text-embedding-3-small', openai_api_key=OPENAI_API_KEY)
 
 # UUID를 이용한 ID 목록 생성
 txt_ids = ['rag-nobel-text-' + str(uuid.uuid1()) for _ in range(len(documents))]
@@ -91,9 +89,9 @@ retriever = vectorstore.as_retriever(search_kwargs={'k': 7})
 print(vectorstore.index_to_docstore_id)
 
 # key 값이 있는 경우만 출력
-if key:
+if OPENAI_API_KEY:
     # key가 유효한 경우만 제목 출력
-    if check_openai_api_key(key):
+    if check_openai_api_key(OPENAI_API_KEY):
         # 프롬프트 생성
         template = """다음 컨텍스트를 사용하여 질문에 답변해주세요. 바이프로스트 네트워크의 서비스들에 대한 고객지원을 담당하는 챗봇으로서, 친절하고 상세하게 답변해주세요. 바이프로스트 서비스와 관련없는 질문은 답하지 마세요.
 
@@ -108,7 +106,7 @@ if key:
         prompt = PromptTemplate.from_template(template)
         
         # LLM 생성
-        llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0, openai_api_key=key)
+        llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0, openai_api_key=OPENAI_API_KEY)
         # 파서 생성
         parser = StrOutputParser()
         # 체인 생성
