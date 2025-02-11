@@ -6,12 +6,8 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain.document_loaders import TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
-from langchain.schema import Document
-from langchain_core.runnables import RunnablePassthrough
-from embedding_generator import generate_and_save_embeddings
 
 # 페이지 설정 (맨 위에 추가)
 st.set_page_config(
