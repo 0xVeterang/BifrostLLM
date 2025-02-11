@@ -11,6 +11,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.schema import Document
 from langchain_core.runnables import RunnablePassthrough
+from embedding_generator import generate_and_save_embeddings
 
 # 페이지 설정 (맨 위에 추가)
 st.set_page_config(
@@ -20,9 +21,28 @@ st.set_page_config(
 )
 
 # OpenAI API Key 설정
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
+def get_openai_api_key():
+    # 환경변수에서 API 키를 우선적으로 가져옴
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if api_key:
+        print("Using OPENAI_API_KEY from environment variable.")
+        return api_key
+
+    # 환경변수가 없으면 config.json 파일에서 API 키를 가져옴
+    config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        api_key = config.get("OPENAI_API_KEY")
+        if api_key:
+            print("Using OPENAI_API_KEY from config.json.")
+            return api_key
+    except FileNotFoundError:
+        print("config.json not found.")
+
+    raise ValueError("OPENAI_API_KEY is not set in environment variables or config.json.")
+
+OPENAI_API_KEY = get_openai_api_key()
 
 # api key 유효성 체크 (그대로 실행하세요)
 def check_openai_api_key(key):
@@ -45,42 +65,18 @@ if not os.path.exists(logo_path):
     #st.sidebar.warning("⚠️ 'logo.webp' 파일이 존재하지 않습니다. 같은 폴더에 추가해주세요.")
     logo_path = None  # 로고가 없으면 기본 아이콘 사용
 
-# JSON 파일 로드 및 텍스트 로더 생성
-def load_and_process_json(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    # 리스트의 각 항목에서 'content'를 추출하여 하나의 문자열로 결합
-    return ' '.join(item['content'] for item in data)
+# FAISS 폴더 경로 설정
+faiss_folder_path = os.path.join(os.path.dirname(__file__), 'faiss')
 
-# 텍스트 로드 및 분할
-file_path_medium = os.path.join(os.path.dirname(__file__), 'data', 'medium', 'medium_articles.json')
-content_medium = load_and_process_json(file_path_medium)
-
-# gitbook 폴더의 모든 JSON 파일 로드
-gitbook_dir = os.path.join(os.path.dirname(__file__), 'data', 'gitbook')
-content_gitbook = ''
-for filename in os.listdir(gitbook_dir):
-    if filename.endswith('.json'):
-        file_path_gitbook = os.path.join(gitbook_dir, filename)
-        content_gitbook += load_and_process_json(file_path_gitbook) + " "
-
-# 두 콘텐츠를 결합
-content = content_medium + " " + content_gitbook
-
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=0)
-txt_docs = text_splitter.split_text(content)
-
-# Document 객체로 변환
-documents = [Document(page_content=doc) for doc in txt_docs]
-
-# 임베딩 생성
-embeddings = OpenAIEmbeddings(model='text-embedding-3-small', openai_api_key=OPENAI_API_KEY)
-
-# UUID를 이용한 ID 목록 생성
-txt_ids = ['rag-nobel-text-' + str(uuid.uuid1()) for _ in range(len(documents))]
-
-# 벡터 스토어 생성
-vectorstore = FAISS.from_documents(documents, embeddings, ids=txt_ids)
+# FAISS 벡터 스토어 불러오기
+if os.path.exists(faiss_folder_path):
+    vectorstore = FAISS.load_local(
+        faiss_folder_path,
+        embeddings=OpenAIEmbeddings(model='text-embedding-3-small', openai_api_key=OPENAI_API_KEY),
+        allow_dangerous_deserialization=True
+    )
+else:
+    vectorstore = generate_and_save_embeddings(OPENAI_API_KEY, faiss_folder_path)
 
 #검색기 생성
 retriever = vectorstore.as_retriever(search_kwargs={'k': 7})
