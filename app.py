@@ -77,9 +77,6 @@ else:
 #검색기 생성
 retriever = vectorstore.as_retriever(search_kwargs={'k': 7})
 
-# 인덱스와 ID 출력
-print(vectorstore.index_to_docstore_id)
-
 # key 값이 있는 경우만 출력
 if OPENAI_API_KEY:
     # key가 유효한 경우만 제목 출력
